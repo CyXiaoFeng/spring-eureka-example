@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/bdass-eureka.iml" filepath="$PROJECT_DIR$/bdass-eureka.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bdass-eureka-client/bdass-eureka-client.iml" filepath="$PROJECT_DIR$/bdass-eureka-client/bdass-eureka-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bdass-eureka-feign/bdass-eureka-feign.iml" filepath="$PROJECT_DIR$/bdass-eureka-feign/bdass-eureka-feign.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bdass-eureka-server/bdass-eureka-server.iml" filepath="$PROJECT_DIR$/bdass-eureka-server/bdass-eureka-server.iml" />
+    </modules>
+  </component>
+</project>
