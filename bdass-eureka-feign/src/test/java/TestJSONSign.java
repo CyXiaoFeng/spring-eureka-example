@@ -1,18 +1,87 @@
-import com.google.gson.annotations.Since;
+import com.netflix.http4.NFHttpClient;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.http.client.HttpClient;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
+@SpringBootTest
+@RunWith(SpringRunner.class)
 public class TestJSONSign {
+
     static Base64.Encoder encoder = Base64.getEncoder();
-    static String key = "NO7UWhCrEf8LHj1QMmuSJ2DMN3uVmowNffIeec3Y9plSZFC1WAuIjoGNY6kJ6M4uMACVVWjKpHVFr3DFeNietpQV3aVZLiGZ9lTmmcPGT8taIrUkgXqEWDQgRQ2J58QD";
-    public static void main(String[] args) {
-        testSetVirtualCode("CMV10999265");
-        testSetRecoder("CMV10999265");
-        testCancelOrder("CMV10999265");
+    static String key = "CzCGbrLRf8RYjT7sPOTFI8tb3D6RFZNrdvbYnRPhCgbCCvh0PtuFt3IErXPpnWSYlKXoJkvIPpUylrWc0k1P3XodgRTEuhJ0kQGB0bp5aOfEMqeZAVVdz2y4EyYCxUQK";
+            //"gb4kaqL7e6NzhBruwYgiYIGiHdI3rt3mgua4pMafZJQA7FNnbzhIJwYxYoP36HUI16jOab77SWFUrqXcn486iOktjzd5jS5MF75ECfSUhBqoaucM2GWVCOgwa3lDMyBh";
+    static String identifyId = "CMV10999073";
+    String apiAddr = "http://pointer.100mj.com/vapi";
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        CompletableFuture.allOf(CompletableFuture.runAsync(()->{
+            testSetVirtualCode();
+            testSetRecoder();
+            testCancelOrder();
+         }
+        )).get();
     }
 
-    public static void testCancelOrder(String identifyId) {
+    /**
+     * 重试提交虚拟码
+     */
+    public static void testRetrySetVirtualCode() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LinkedMultiValueMap body=new LinkedMultiValueMap();
+        body.add("req",getVirtualCode(identifyId));
+        HttpEntity entity = new HttpEntity(body,headers);
+        String url = "http://222.35.5.7/vapi/service/retry/setVirtualCode";
+        RestTemplate template = new RestTemplate();
+        for(int i=0;i<500;i++) {
+//            System.out.println(i);
+                    ResponseEntity re = template.exchange(url, HttpMethod.POST, entity, String.class);
+                    System.out.println(re.getBody().toString());
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * 重试提交消费记录
+     */
+    public static void testRetrySetRecoder() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LinkedMultiValueMap body=new LinkedMultiValueMap();
+        body.add("req",getRecoderCode(identifyId));
+        HttpEntity entity = new HttpEntity(body,headers);
+        String url = "http://222.35.5.7/vapi/service/retry/setRecord";
+        RestTemplate template = new RestTemplate();
+        for(int i=0;i<500;i++) {
+//            System.out.println(i);
+            ResponseEntity re = template.exchange(url, HttpMethod.POST, entity, String.class);
+            System.out.println(re.getBody().toString());
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+    /**
+     * 撤单
+     */
+    public static void testCancelOrder() {
         String json = String.format("{" +
                 "\"version\":\"2.0\"," +
                 "\"identity_id\":\"%s\"," +
@@ -24,14 +93,65 @@ public class TestJSONSign {
                 "\"userPhone\":\"13700000000\"" +
                 "}" +
                 "}",identifyId);
-        System.out.println(getReqByJson(json));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LinkedMultiValueMap body=new LinkedMultiValueMap();
+        body.add("req",getReqByJson(json));
+        HttpEntity entity = new HttpEntity(body,headers);
+        String url = "http://222.35.5.7/vapi/service/cancelOrder";
+        RestTemplate template = new RestTemplate();
+        ResponseEntity re = template.exchange(url, HttpMethod.POST, entity, String.class);
+        System.out.println(re.getBody().toString());
     }
 
     /**
      * 提交消费记录
-     * @param identityId 商品编号
      */
-    public static void testSetRecoder(String identityId) {
+    public static void testSetRecoder() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LinkedMultiValueMap body=new LinkedMultiValueMap();
+        body.add("req",getRecoderCode(identifyId));
+        HttpEntity entity = new HttpEntity(body,headers);
+        String url = "http://222.35.5.7/vapi/service/setRecord";
+        RestTemplate template = new RestTemplate();
+        ResponseEntity re = template.exchange(url, HttpMethod.POST, entity, String.class);
+        System.out.println(re.getBody().toString());
+
+    }
+    /**
+     * 提交虚拟单号
+     */
+    public static void testSetVirtualCode() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LinkedMultiValueMap body=new LinkedMultiValueMap();
+        body.add("req",getVirtualCode(identifyId));
+        HttpEntity entity = new HttpEntity(body,headers);
+        String url = "http://222.35.5.7/vapi/service/setVirtualCode";
+        RestTemplate template = new RestTemplate();
+        ResponseEntity re = template.exchange(url, HttpMethod.POST, entity, String.class);
+        System.out.println(re.getBody().toString());
+
+    }
+    /**
+     *  获取虚拟码
+     * @param identityId 商户编号
+     */
+    private static String getVirtualCode(String identityId) {
+        String json = String.format("{\"version\":\"2.0\",\"identity_id\":\"%s\"," +
+                "\"source\":\"1\",\"data\":{\"virtualCodes\":[{\"vcodePass\":" +
+                "\"%s_1234522678\",\"vcode\":\"%s_12333345678\"}],\"itemId\":" +
+                "\"X17011900041640-01\",\"orderId\":\"V18032816917475\"}}",identityId,identityId,identityId);
+       return getReqByJson(json);
+
+    }
+
+    /**
+     * 获取消费记录
+     * @param identityId 商户编号
+     */
+    private static String getRecoderCode(String identityId) {
         String json = String.format("{" +
                 "\"source\":\"2\"," +
                 "\"version\":\"2.0\"," +
@@ -40,34 +160,12 @@ public class TestJSONSign {
                 "{" +
                 "\"recordList\":[" +
                 "{" +
-                "\"orderId\":\"V16110114687522\"," +
-                "\"itemId\":\"X16091900000000-01\"," +
-                "\"useId\":\"%s_12345\"," +
-                "\"virtualCode\":\"%s_12345678\"," +
+                "\"orderId\":\"V18032816917475\"," +
+                "\"itemId\":\"X17011900041640-01\"," +
+                "\"useId\":\"%s_123454453344\"," +
+                "\"virtualCode\":\"%s_123454433678\"," +
                 "\"useAmount\":\"5.00\"," +
-                "\"useDatetime\":\"2016-11-08 00:09:45\"," +
-                "\"useContent\":\"消费内容\"," +
-                "\"phone\":\"13700000000\"," +
-                "\"virtualCodePass\":\"%s_12345678\"" +
-                "}," +
-                "{" +
-                "\"orderId\":\"V16110114687522\"," +
-                "\"itemId\":\"X16091900000000-01\"," +
-                "\"useId\":\"%s_56789\"," +
-                "\"virtualCode\":\"%s_12345678\"," +
-                "\"useAmount\":\"5.00\"," +
-                "\"useDatetime\":\"2016-11-08 00:09:45\"," +
-                "\"useContent\":\"消费内容\"," +
-                "\"phone\":\"13700000000\"," +
-                "\"virtualCodePass\":\"%s_12345678\"" +
-                "}," +
-                "{" +
-                "\"orderId\":\"V16110114687523\"," +
-                "\"itemId\":\"X16091900000000-01\"," +
-                "\"useId\":\"%s_67891\"," +
-                "\"virtualCode\":\"%s_12345678\"," +
-                "\"useAmount\":\"5.00\"," +
-                "\"useDatetime\":\"2016-11-08 00:09:45\"," +
+                "\"useDatetime\":\"2018-04-08 00:09:45\"," +
                 "\"useContent\":\"消费内容\"," +
                 "\"phone\":\"13700000000\"," +
                 "\"virtualCodePass\":\"%s_12345678\"" +
@@ -75,18 +173,7 @@ public class TestJSONSign {
                 "]" +
                 "}" +
                 "}",identityId,identityId,identityId,identityId,identityId,identityId,identityId,identityId,identityId,identityId);
-        System.out.println(getReqByJson(json));
-
-    }
-    /**
-     *
-     * @param identityId 商户编号
-     */
-    public static void testSetVirtualCode(String identityId) {
-        String json = String.format("{\"version\":\"2.0\",\"identity_id\":\"%s\",\"source\":\"1\",\"data\":{\"virtualCodes\":[{\"vcodePass\":" +
-                "\"%s_12345678\",\"vcode\":\"%s_12345678\"}],\"itemId\":" +
-                "\"X16110300000000-01\",\"orderId\":\"V16110114687522\"}}",identityId,identityId,identityId);
-        System.out.println(getReqByJson(json));
+        return getReqByJson(json);
 
     }
 
